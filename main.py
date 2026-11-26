@@ -30,13 +30,25 @@ ENTRY = "Diagnosis: chronic main-character syndrome — your supporting cast has
 MAX_CHARS = 200
 
 
-def entry_text() -> str:
-    """Return the entry, refusing anything outside the gate's limits."""
-    if not 1 <= len(ENTRY) <= MAX_CHARS:
-        raise ValueError(f"entry is {len(ENTRY)} chars, must be 1-{MAX_CHARS}")
-    if ENTRY.strip() != ENTRY or "\n" in ENTRY or not ENTRY.strip():
+def validate_entry(text: str) -> str:
+    """Return the entry, refusing anything outside the gate's limits.
+
+    The gate counts characters, so the check is on characters, not bytes.
+    Control characters are rejected too: the gate wants clean UTF-8 text,
+    and a stray control byte would make the entry unreadable to the judge.
+    """
+    if not 1 <= len(text) <= MAX_CHARS:
+        raise ValueError(f"entry is {len(text)} chars, must be 1-{MAX_CHARS}")
+    if text.strip() != text or "\n" in text or not text.strip():
         raise ValueError("entry must be one clean, non-empty line")
-    return ENTRY
+    if any(ord(ch) < 0x20 for ch in text):
+        raise ValueError("entry must not contain control characters")
+    return text
+
+
+def entry_text() -> str:
+    """Return the validated entry line."""
+    return validate_entry(ENTRY)
 
 
 def main() -> None:
